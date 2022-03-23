@@ -1,0 +1,81 @@
+---
+title: "Downloading precip in CO"
+author: "Brian"
+date: "3/23/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r download-packages, include=FALSE}
+#LABEL YOUR CHUNKS!
+knitr::opts_chunk$set(echo = TRUE)
+library(riem)
+library(sf)
+library(mapview)
+library(tidyverse)
+#library(rayshader)
+library(USAboundaries)
+library(raster)
+library(elevatr)
+library(tmap)
+
+```
+
+#Download and Data Check
+
+```{r}
+network <- riem_networks()
+
+co_stations <- riem_stations(network = 'CO_ASOS') %>% 
+  st_as_sf(., coords = c('lon', 'lat'), crs = 4326)
+
+glimpse(co_stations)
+```
+
+##Interactive map
+
+```{r}
+mapview(co_stations)
+
+```
+
+## Static Map
+
+### Download some DEM data
+
+```{r}
+
+#This didn;t work for matt, so he skipped it. 
+co_elev <- elevatr::get_elev_raster(co_stations, 
+                                    z = 9)
+
+co <- us_counties(states = "Colorado")
+
+tm_shape(co) +
+  tm_polygons(col = "white") +
+tm_shape(co_stations) +
+  tm_bubbles() 
+
+
+```
+
+## Download a single site data
+
+```{r}
+
+fnl <- riem_measures(station = "FNL", 
+                     date_start = "1987-01-01",
+                     date_end = "1992-11-01")
+
+daily <- fnl %>% 
+  mutate(date = as.Date(valid)) %>% 
+  group_by(date) %>% 
+  summarize(daily_rain = mean(p01i, na.rm = TRUE))
+
+ggplot(daily, aes(x=date, y = daily_rain)) +
+  geom_point() +
+  scale_y_log10()
+
+```
+
