@@ -71,9 +71,9 @@ fnl <- riem_measures(station = "FNL",
 daily <- fnl %>% 
   mutate(date = as.Date(valid)) %>% 
   group_by(date) %>% 
-  summarize(daily_rain = mean(p01i, na.rm = TRUE))
+  summarize(daily_temp = mean(tmpf, na.rm = TRUE))
 
-ggplot(daily, aes(x=date, y = daily_rain)) +
+ggplot(daily, aes(x=date, y = daily_temp)) +
   geom_point() +
   scale_y_log10()
 
